@@ -13,7 +13,7 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(bitcode_reader_2_7_SRC_FILES)
 
-LOCAL_MODULE:= libLLVMBitReader_2_7
+LOCAL_MODULE:= lib${LLVM_VER}LLVMBitReader_2_7
 
 LOCAL_MODULE_TAGS := optional
 
@@ -27,7 +27,7 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := $(bitcode_reader_2_7_SRC_FILES)
 
-LOCAL_MODULE:= libLLVMBitReader_2_7
+LOCAL_MODULE:= lib${LLVM_VER}LLVMBitReader_2_7
 
 LOCAL_MODULE_TAGS := optional
 

@@ -28,8 +28,13 @@ LOCAL_SRC_FILES := \
 
 include $(BUILD_SYSTEM)/base_rules.mk
 
-clcore_CLANG := $(HOST_OUT_EXECUTABLES)/clang$(HOST_EXECUTABLE_SUFFIX)
-clcore_LLVM_LINK := $(HOST_OUT_EXECUTABLES)/llvm-link$(HOST_EXECUTABLE_SUFFIX)
+LLVM_VER :=
+ifeq ($(BOARD_USE_QCOM_LLVM_CLANG_RS),true)
+	LLVM_VER := RS
+endif
+
+clcore_CLANG := $(HOST_OUT_EXECUTABLES)/$(LLVM_VER)clang$(HOST_EXECUTABLE_SUFFIX)
+clcore_LLVM_LINK := $(HOST_OUT_EXECUTABLES)/$(LLVM_VER)llvm-link$(HOST_EXECUTABLE_SUFFIX)
 
 clcore_bc_files := $(patsubst %.c,%.bc, \
     $(addprefix $(intermediates)/, $(LOCAL_SRC_FILES)))

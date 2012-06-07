@@ -39,6 +39,10 @@ libbcc_WHOLE_STATIC_LIBRARIES += \
 #=====================================================================
 
 include $(CLEAR_VARS)
+LLVM_VER :=
+ifeq ($(BOARD_USE_QCOM_LLVM_CLANG_RS),true)
+	LLVM_VER := RS
+endif
 
 LOCAL_MODULE := libbcc.so.sha1
 LOCAL_MODULE_TAGS := optional
@@ -62,6 +66,10 @@ $(LOCAL_BUILT_MODULE): $(libbcc_SHA1_SRCS) $(libbcc_GEN_SHA1_STAMP)
 #=====================================================================
 
 include $(CLEAR_VARS)
+LLVM_VER :=
+ifeq ($(BOARD_USE_QCOM_LLVM_CLANG_RS),true)
+	LLVM_VER := RS
+endif
 
 LOCAL_MODULE := libbcc
 LOCAL_MODULE_TAGS := optional
@@ -83,12 +91,12 @@ endif
 ifeq ($(libbcc_USE_DISASSEMBLER),1)
   ifeq ($(TARGET_ARCH),arm)
     LOCAL_STATIC_LIBRARIES += \
-      libLLVMARMDisassembler \
-      libLLVMARMAsmPrinter
+      lib${LLVM_VER}LLVMARMDisassembler \
+      lib${LLVM_VER}LLVMARMAsmPrinter
   else
     ifeq ($(TARGET_ARCH),x86)
       LOCAL_STATIC_LIBRARIES += \
-        libLLVMX86Disassembler
+        lib${LLVM_VER}LLVMX86Disassembler
     else
       $(error Unsupported TARGET_ARCH $(TARGET_ARCH))
     endif
@@ -97,40 +105,40 @@ endif
 
 ifeq ($(TARGET_ARCH),arm)
   LOCAL_STATIC_LIBRARIES += \
-    libLLVMARMCodeGen \
-    libLLVMARMDesc \
-    libLLVMARMInfo
+    lib${LLVM_VER}LLVMARMCodeGen \
+    lib${LLVM_VER}LLVMARMDesc \
+    lib${LLVM_VER}LLVMARMInfo
 else
   ifeq ($(TARGET_ARCH),x86) # We don't support x86-64 right now
     LOCAL_STATIC_LIBRARIES += \
-      libLLVMX86CodeGen \
-      libLLVMX86Desc \
-      libLLVMX86Info \
-      libLLVMX86Utils \
-      libLLVMX86AsmPrinter
+      lib${LLVM_VER}LLVMX86CodeGen \
+      lib${LLVM_VER}LLVMX86Desc \
+      lib${LLVM_VER}LLVMX86Info \
+      lib${LLVM_VER}LLVMX86Utils \
+      lib${LLVM_VER}LLVMX86AsmPrinter
   else
     $(error Unsupported TARGET_ARCH $(TARGET_ARCH))
   endif
 endif
 
 LOCAL_STATIC_LIBRARIES += \
-  libLLVMAsmPrinter \
-  libLLVMBitReader \
-  libLLVMSelectionDAG \
-  libLLVMCodeGen \
-  libLLVMLinker \
-  libLLVMJIT \
-  libLLVMScalarOpts \
-  libLLVMInstCombine \
-  libLLVMipo \
-  libLLVMipa \
-  libLLVMTransformUtils \
-  libLLVMAnalysis \
-  libLLVMTarget \
-  libLLVMMCParser \
-  libLLVMMC \
-  libLLVMCore \
-  libLLVMSupport
+  lib${LLVM_VER}LLVMAsmPrinter \
+  lib${LLVM_VER}LLVMBitReader \
+  lib${LLVM_VER}LLVMSelectionDAG \
+  lib${LLVM_VER}LLVMCodeGen \
+  lib${LLVM_VER}LLVMLinker \
+  lib${LLVM_VER}LLVMJIT \
+  lib${LLVM_VER}LLVMScalarOpts \
+  lib${LLVM_VER}LLVMInstCombine \
+  lib${LLVM_VER}LLVMipo \
+  lib${LLVM_VER}LLVMipa \
+  lib${LLVM_VER}LLVMTransformUtils \
+  lib${LLVM_VER}LLVMAnalysis \
+  lib${LLVM_VER}LLVMTarget \
+  lib${LLVM_VER}LLVMMCParser \
+  lib${LLVM_VER}LLVMMC \
+  lib${LLVM_VER}LLVMCore \
+  lib${LLVM_VER}LLVMSupport
 
 LOCAL_SHARED_LIBRARIES := libdl libcutils libutils libstlport
 
@@ -140,11 +148,11 @@ LOCAL_REQUIRED_MODULES := libclcore.bc libbcc.so.sha1
 # -Wl,--exclude-libs=ALL only applies to library archives. It would hide most of
 # the symbols in this shared library. As a result, it reduced the size of libbcc.so
 # by about 800k in 2010.
-# Note that libLLVMBitReader:libLLVMCore:libLLVMSupport are used by pixelflinger2.
+# Note that lib${LLVM_VER}LLVMBitReader:lib${LLVM_VER}LLVMCore:lib${LLVM_VER}LLVMSupport are used by pixelflinger2.
 ifeq ($(BOARD_USE_QCOM_LLVM_CLANG_RS),true)
   LOCAL_LDFLAGS += -Wl,--exclude-libs=ALL
 else
-  LOCAL_LDFLAGS += -Wl,--exclude-libs=libLLVMARMDisassembler:libLLVMARMAsmPrinter:libLLVMX86Disassembler:libLLVMX86AsmPrinter:libLLVMMCParser:libLLVMARMCodeGen:libLLVMARMDesc:libLLVMARMInfo:libLLVMSelectionDAG:libLLVMAsmPrinter:libLLVMCodeGen:libLLVMLinker:libLLVMJIT:libLLVMTarget:libLLVMMC:libLLVMScalarOpts:libLLVMInstCombine:libLLVMipo:libLLVMipa:libLLVMTransformUtils:libLLVMAnalysis
+  LOCAL_LDFLAGS += -Wl,--exclude-libs=lib${LLVM_VER}LLVMARMDisassembler:lib${LLVM_VER}LLVMARMAsmPrinter:lib${LLVM_VER}LLVMX86Disassembler:lib${LLVM_VER}LLVMX86AsmPrinter:lib${LLVM_VER}LLVMMCParser:lib${LLVM_VER}LLVMARMCodeGen:lib${LLVM_VER}LLVMARMDesc:lib${LLVM_VER}LLVMARMInfo:lib${LLVM_VER}LLVMSelectionDAG:lib${LLVM_VER}LLVMAsmPrinter:lib${LLVM_VER}LLVMCodeGen:lib${LLVM_VER}LLVMLinker:lib${LLVM_VER}LLVMJIT:lib${LLVM_VER}LLVMTarget:lib${LLVM_VER}LLVMMC:lib${LLVM_VER}LLVMScalarOpts:lib${LLVM_VER}LLVMInstCombine:lib${LLVM_VER}LLVMipo:lib${LLVM_VER}LLVMipa:lib${LLVM_VER}LLVMTransformUtils:lib${LLVM_VER}LLVMAnalysis
 endif
 
 # Generate build stamp (Build time + Build git revision + Build Semi SHA1)
@@ -159,6 +167,10 @@ include $(BUILD_SHARED_LIBRARY)
 # Host Shared Library libbcc
 #=====================================================================
 include $(CLEAR_VARS)
+LLVM_VER :=
+ifeq ($(BOARD_USE_QCOM_LLVM_CLANG_RS),true)
+	LLVM_VER := RS
+endif
 
 LOCAL_MODULE := libbcc
 LOCAL_MODULE_TAGS := optional
@@ -178,46 +190,46 @@ endif
 
 ifeq ($(libbcc_USE_DISASSEMBLER),1)
   LOCAL_STATIC_LIBRARIES += \
-    libLLVMARMDisassembler \
-    libLLVMARMAsmPrinter \
-    libLLVMX86Disassembler \
-    libLLVMMCParser
+    lib${LLVM_VER}LLVMARMDisassembler \
+    lib${LLVM_VER}LLVMARMAsmPrinter \
+    lib${LLVM_VER}LLVMX86Disassembler \
+    lib${LLVM_VER}LLVMMCParser
 endif
 
 LOCAL_STATIC_LIBRARIES += \
   libcutils \
   libutils \
-  libLLVMARMCodeGen \
-  libLLVMARMDesc \
-  libLLVMARMInfo
+  lib${LLVM_VER}LLVMARMCodeGen \
+  lib${LLVM_VER}LLVMARMDesc \
+  lib${LLVM_VER}LLVMARMInfo
 
 ifneq ($(BOARD_USE_QCOM_LLVM_CLANG_RS),true)
 LOCAL_STATIC_LIBRARIES += \
-  libLLVMX86CodeGen \
-  libLLVMX86Desc \
-  libLLVMX86Info \
-  libLLVMX86Utils \
-  libLLVMX86AsmPrinter
+  lib${LLVM_VER}LLVMX86CodeGen \
+  lib${LLVM_VER}LLVMX86Desc \
+  lib${LLVM_VER}LLVMX86Info \
+  lib${LLVM_VER}LLVMX86Utils \
+  lib${LLVM_VER}LLVMX86AsmPrinter
 endif
 
 LOCAL_STATIC_LIBRARIES += \
-  libLLVMAsmPrinter \
-  libLLVMBitReader \
-  libLLVMSelectionDAG \
-  libLLVMCodeGen \
-  libLLVMLinker \
-  libLLVMJIT \
-  libLLVMScalarOpts \
-  libLLVMInstCombine \
-  libLLVMipo \
-  libLLVMipa \
-  libLLVMTransformUtils \
-  libLLVMAnalysis \
-  libLLVMTarget \
-  libLLVMMCParser \
-  libLLVMMC \
-  libLLVMCore \
-  libLLVMSupport
+  lib${LLVM_VER}LLVMAsmPrinter \
+  lib${LLVM_VER}LLVMBitReader \
+  lib${LLVM_VER}LLVMSelectionDAG \
+  lib${LLVM_VER}LLVMCodeGen \
+  lib${LLVM_VER}LLVMLinker \
+  lib${LLVM_VER}LLVMJIT \
+  lib${LLVM_VER}LLVMScalarOpts \
+  lib${LLVM_VER}LLVMInstCombine \
+  lib${LLVM_VER}LLVMipo \
+  lib${LLVM_VER}LLVMipa \
+  lib${LLVM_VER}LLVMTransformUtils \
+  lib${LLVM_VER}LLVMAnalysis \
+  lib${LLVM_VER}LLVMTarget \
+  lib${LLVM_VER}LLVMMCParser \
+  lib${LLVM_VER}LLVMMC \
+  lib${LLVM_VER}LLVMCore \
+  lib${LLVM_VER}LLVMSupport
 
 LOCAL_LDLIBS := -ldl -lpthread
 
