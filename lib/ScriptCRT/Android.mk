@@ -38,6 +38,11 @@ clcore_neon_files := \
     $(clcore_base_files) \
     neon/clamp.ll
 
+ifeq ($(BOARD_USE_QCOM_LLVM_CLANG_RS),true)
+QCOM_FLAGS := -DQCOM_LLVM
+clcore_neon_files += neon/neonRuntimeMath.cpp
+endif
+
 ifeq "REL" "$(PLATFORM_VERSION_CODENAME)"
   RS_VERSION := $(PLATFORM_SDK_VERSION)
 else
@@ -63,6 +68,6 @@ LOCAL_MODULE := libclcore_neon.bc
 LOCAL_MODULE_TAGS := optional
 LOCAL_MODULE_CLASS := SHARED_LIBRARIES
 LOCAL_SRC_FILES := $(clcore_neon_files)
-
 include $(LOCAL_PATH)/build_bc_lib.mk
+$(intermediates)/neon/neonRuntimeMath.bc: bc_cxxflags:=$(filter-out -fno-builtin,$(bc_cxxflags))
 endif

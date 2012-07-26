@@ -19,7 +19,7 @@
 # Root Path for Other Projects
 #=====================================================================
 
-LLVM_ROOT_PATH      := external/llvm
+LLVM_ROOT_PATH := $(call get_llvm_root_path)
 LIBBCC_ROOT_PATH    := frameworks/compile/libbcc
 RSLOADER_ROOT_PATH  := frameworks/compile/linkloader
 
@@ -56,6 +56,21 @@ ifneq ($(TARGET_BUILD_VARIANT),eng)
 libbcc_CFLAGS += -D__DISABLE_ASSERTS
 else
 libbcc_CFLAGS += -DANDROID_ENGINEERING_BUILD
+endif
+ifeq ($(BOARD_USE_QCOM_LLVM_CLANG_RS),true)
+	libbcc_CFLAGS += -DQCOM_LLVM
+ifeq ($(call is-board-platform,msm8660), true)
+	libbcc_CFLAGS += -DARCH_ARM_MCPU_8660
+endif
+ifeq ($(call is-board-platform,msm8960), true)
+	libbcc_CFLAGS += -DARCH_ARM_MCPU_8960
+endif
+ifeq ($(call is-board-platform,msm7630_surf), true)
+	libbcc_CFLAGS += -DARCH_ARM_MCPU_8X55
+endif
+ifeq ($(call is-board-platform,msm7627a), true)
+	libbcc_CFLAGS += -DARCH_ARM_MCPU_7X27A
+endif
 endif
 
 # Include File Search Path

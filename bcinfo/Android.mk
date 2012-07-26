@@ -38,15 +38,16 @@ libbcinfo_SRC_FILES := \
 
 libbcinfo_C_INCLUDES := $(LOCAL_PATH)/../include
 libbcinfo_STATIC_LIBRARIES := \
-  libLLVMWrap \
-  libLLVMBitReader \
-  libLLVMBitWriter \
-  libLLVMCore \
-  libLLVMSupport \
-  libLLVMBitReader_2_7 \
-  libLLVMBitReader_3_0
+  lib${LLVM_VER}LLVMWrap \
+  lib${LLVM_VER}LLVMBitReader \
+  lib${LLVM_VER}LLVMBitWriter \
+  lib${LLVM_VER}LLVMCore \
+  lib${LLVM_VER}LLVMSupport \
+  lib${LLVM_VER}LLVMBitReader_2_7 \
+  lib${LLVM_VER}LLVMBitReader_3_0
 
-LLVM_ROOT_PATH := external/llvm
+
+LLVM_ROOT_PATH := $(call get_llvm_root_path)
 
 include $(CLEAR_VARS)
 
