@@ -15,8 +15,7 @@
 #
 
 LOCAL_PATH:= $(call my-dir)
-
-LLVM_ROOT_PATH := $(LOCAL_PATH)/../../../../../external/llvm
+LLVM_ROOT_PATH := $(call get_llvm_root_path)
 include $(LLVM_ROOT_PATH)/llvm.mk
 
 llvm_wrap_SRC_FILES := \
@@ -32,7 +31,7 @@ llvm_wrap_C_INCLUDES := $(LOCAL_PATH)/../../include
 # =====================================================
 include $(CLEAR_VARS)
 
-LOCAL_MODULE:= libLLVMWrap
+LOCAL_MODULE:= lib${LLVM_VER}LLVMWrap
 LOCAL_MODULE_TAGS := optional
 
 LOCAL_SRC_FILES := $(llvm_wrap_SRC_FILES)
@@ -47,7 +46,7 @@ include $(BUILD_HOST_STATIC_LIBRARY)
 # =====================================================
 include $(CLEAR_VARS)
 
-LOCAL_MODULE:= libLLVMWrap
+LOCAL_MODULE:= lib${LLVM_VER}LLVMWrap
 LOCAL_MODULE_TAGS := optional
 
 LOCAL_SRC_FILES := $(llvm_wrap_SRC_FILES)

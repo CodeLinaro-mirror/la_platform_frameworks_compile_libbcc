@@ -1,6 +1,6 @@
 LOCAL_PATH:= $(call my-dir)
 
-LLVM_ROOT_PATH := $(LOCAL_PATH)/../../../../../external/llvm
+LLVM_ROOT_PATH := $(call get_llvm_root_path)
 include $(LLVM_ROOT_PATH)/llvm.mk
 
 bitcode_reader_3_0_SRC_FILES := \
@@ -10,7 +10,7 @@ bitcode_reader_3_0_SRC_FILES := \
 # =====================================================
 include $(CLEAR_VARS)
 
-LOCAL_MODULE:= libLLVMBitReader_3_0
+LOCAL_MODULE:= lib${LLVM_VER}LLVMBitReader_3_0
 LOCAL_MODULE_TAGS := optional
 
 LOCAL_SRC_FILES := $(bitcode_reader_3_0_SRC_FILES)
@@ -24,7 +24,7 @@ include $(BUILD_HOST_STATIC_LIBRARY)
 # =====================================================
 include $(CLEAR_VARS)
 
-LOCAL_MODULE:= libLLVMBitReader_3_0
+LOCAL_MODULE:= lib${LLVM_VER}LLVMBitReader_3_0
 LOCAL_MODULE_TAGS := optional
 
 LOCAL_SRC_FILES := $(bitcode_reader_3_0_SRC_FILES)
