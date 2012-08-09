@@ -26,6 +26,7 @@ bc_cflags := -MD \
              -emit-llvm \
              -ccc-host-triple armv7-none-linux-gnueabi \
              -fsigned-char
+bc_cflags += $(QCOM_FLAGS)
 
 bc_cxxflags := $(filter-out -std=c99,$(bc_cflags))
 
