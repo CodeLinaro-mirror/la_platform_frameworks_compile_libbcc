@@ -20,7 +20,45 @@
 extern float __attribute__((overloadable)) clamp(float amount, float low, float high) {
     return amount < low ? low : (amount > high ? high : amount);
 }
+#ifdef QCOM_LLVM
+extern float2 __attribute__((overloadable)) clamp(float2 amount, float2 low, float2 high) {
+    float2 r;
+    r = amount < low ? low : ( amount > high ? high : amount );
+    return r;
+}
+extern float3 __attribute__((overloadable)) clamp(float3 amount, float3 low, float3 high) {
+    float3 r;
+    r = amount < low ? low : ( amount > high ? high : amount );
+    return r;
+}
+extern float4 __attribute__((overloadable)) clamp(float4 amount, float4 low, float4 high) {
+    float4 r;
+    r = amount < low ? low : ( amount > high ? high : amount );
+    return r;
+}
+extern float2 __attribute__((overloadable)) clamp(float2 amount, float low, float high) {
+    float2 r;
+    float2 vlow = low;
+    float2 vhigh = high;
+    r = amount < vlow ? vlow : ( amount > vhigh ? vhigh : amount );
+    return r;
+}
+extern float3 __attribute__((overloadable)) clamp(float3 amount, float low, float high) {
+    float3 r;
+    float3 vlow = low;
+    float3 vhigh = high;
+    r = amount < vlow ? vlow : ( amount > vhigh ? vhigh : amount );
+    return r;
+}
+extern float4 __attribute__((overloadable)) clamp(float4 amount, float low, float high) {
+    float4 r;
+    float4 vlow = low;
+    float4 vhigh = high;
+    r = amount < vlow ? vlow : ( amount > vhigh ? vhigh : amount );
+    return r;
+}
 
+#else
 extern float2 __attribute__((overloadable)) clamp(float2 amount, float2 low, float2 high) {
     float2 r;
     r.x = amount.x < low.x ? low.x : (amount.x > high.x ? high.x : amount.x);
@@ -68,5 +106,6 @@ extern float4 __attribute__((overloadable)) clamp(float4 amount, float low, floa
     r.w = amount.w < low ? low : (amount.w > high ? high : amount.w);
     return r;
 }
+#endif
 
 

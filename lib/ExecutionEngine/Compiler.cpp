@@ -80,7 +80,8 @@
 #include <vector>
 
 extern char* gDebugDumpDirectory;
-
+extern llvm::cl::opt<unsigned> UnrollThreshold;
+extern llvm::cl::opt<bool> UnrollAllowPartial;
 namespace bcc {
 
 //////////////////////////////////////////////////////////////////////////////
@@ -177,7 +178,15 @@ void Compiler::GlobalInitialization() {
 #else
   ArchType = llvm::Triple::UnknownArch;
 #endif
-
+#if defined(DEFAULT_ARM_CODEGEN) && defined(QCOM_LLVM)
+#if defined(ARCH_ARM_MCPU_8660) || defined(ARCH_ARM_MCPU_8X55)
+  CPU = "scorpion";
+#endif
+#if defined(ARCH_ARM_MCPU_8960) || defined (ARCH_ARM_MCPU_8064)
+  CPU = "krait2";
+#endif
+#endif
+ALOGE("CPU is %s", CPU.c_str() );
   if ((ArchType == llvm::Triple::arm) || (ArchType == llvm::Triple::thumb)) {
 #  if defined(ARCH_ARM_HAVE_VFP)
     Features.push_back("+vfp3");
@@ -194,6 +203,29 @@ void Compiler::GlobalInitialization() {
     Features.push_back("-neonfp");
 #  endif
   }
+
+// set optimization flags
+#if defined(QCOM_LLVM)
+#if  defined(ARCH_ARM_MCPU_8960) || defined(ARCH_ARM_MCPU_8660) ||\
+  defined(ARCH_ARM_MCPU_8X55) || defined(ARCH_ARM_MCPU_7X27A) || \
+  defined(ARCH_ARM_MCPU_8064)
+  // -mllvm -enable-rs-opt: -expand-limit=0 -check-vmlx-hazard=false
+  // -unroll-threshold=1000 -unroll-allow-partial -pre-RA-sched=list-ilp
+  std::vector<const char *> Opts;
+  Opts.push_back("clang (LLVM option parsing)"); // Fake program name.
+  Opts.push_back("-pre-RA-sched=list-ilp");
+  Opts.push_back("-expand-limit=0");
+  Opts.push_back("-check-vmlx-hazard=false");
+  Opts.push_back("-unroll-threshold=1000");
+  Opts.push_back("-unroll-allow-partial");
+  Opts.push_back(0);
+  llvm::cl::ParseCommandLineOptions(Opts.size() - 1, const_cast<char **>(&Opts[0]));
+
+  // Force UnrollThreshold and UnrollAllowPartial to be linked
+  ALOGD("UnrollThreold=%u",  (unsigned)UnrollThreshold);
+  ALOGD("UnrollAllowPartial=%d", (bool)UnrollAllowPartial);
+#endif
+#endif
 
   // Register the scheduler
   llvm::RegisterScheduler::setDefault(llvm::createDefaultScheduler);
