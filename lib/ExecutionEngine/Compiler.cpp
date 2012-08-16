@@ -80,8 +80,6 @@
 #include <vector>
 
 extern char* gDebugDumpDirectory;
-extern llvm::cl::opt<unsigned> UnrollThreshold;
-extern llvm::cl::opt<bool> UnrollAllowPartial;
 namespace bcc {
 
 //////////////////////////////////////////////////////////////////////////////
@@ -216,14 +214,8 @@ ALOGE("CPU is %s", CPU.c_str() );
   Opts.push_back("-pre-RA-sched=list-ilp");
   Opts.push_back("-expand-limit=0");
   Opts.push_back("-check-vmlx-hazard=false");
-  Opts.push_back("-unroll-threshold=1000");
-  Opts.push_back("-unroll-allow-partial");
   Opts.push_back(0);
   llvm::cl::ParseCommandLineOptions(Opts.size() - 1, const_cast<char **>(&Opts[0]));
-
-  // Force UnrollThreshold and UnrollAllowPartial to be linked
-  ALOGD("UnrollThreold=%u",  (unsigned)UnrollThreshold);
-  ALOGD("UnrollAllowPartial=%d", (bool)UnrollAllowPartial);
 #endif
 #endif
 
