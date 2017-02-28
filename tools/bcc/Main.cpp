@@ -38,16 +38,11 @@
 #include <llvm/Support/raw_ostream.h>
 
 #include <bcc/BCCContext.h>
-#include <bcc/Compiler.h>
-#include <bcc/Config/Config.h>
-#include <bcc/Renderscript/RSCompilerDriver.h>
-#include <bcc/Script.h>
+#include <bcc/CompilerConfig.h>
+#include <bcc/Config.h>
+#include <bcc/Initialization.h>
+#include <bcc/RSCompilerDriver.h>
 #include <bcc/Source.h>
-#include <bcc/Support/Log.h>
-#include <bcc/Support/CompilerConfig.h>
-#include <bcc/Support/Initialization.h>
-#include <bcc/Support/InputFile.h>
-#include <bcc/Support/OutputFile.h>
 
 using namespace bcc;
 
@@ -350,7 +345,7 @@ int main(int argc, char **argv) {
       return EXIT_FAILURE;
     }
 
-    std::unique_ptr<RSScript> s(new (std::nothrow) RSScript(*source, RSCD.getConfig()));
+    std::unique_ptr<Script> s(new (std::nothrow) Script(source));
     if (s == nullptr) {
       llvm::errs() << "Out of memory when creating script for file `"
                    << OptInputFilenames[0] << "'!\n";
@@ -358,6 +353,7 @@ int main(int argc, char **argv) {
       return EXIT_FAILURE;
     }
 
+    s->setOptimizationLevel(RSCD.getConfig()->getOptimizationLevel());
     llvm::SmallString<80> output(OptOutputPath);
     llvm::sys::path::append(output, "/", OptOutputFilename);
     llvm::sys::path::replace_extension(output, ".o");

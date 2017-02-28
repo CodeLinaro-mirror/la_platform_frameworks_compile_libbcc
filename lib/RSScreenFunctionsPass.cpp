@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "bcc/Renderscript/RSTransforms.h"
-#include "bcc/Support/Log.h"
+#include "Log.h"
+#include "RSTransforms.h"
 #include "RSStubsWhiteList.h"
 
 #include <cstdlib>

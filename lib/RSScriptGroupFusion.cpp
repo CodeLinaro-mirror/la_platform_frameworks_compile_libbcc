@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-#include "bcc/Renderscript/RSScriptGroupFusion.h"
+#include "RSScriptGroupFusion.h"
 
-#include "bcc/Assert.h"
+#include "Assert.h"
+#include "Log.h"
 #include "bcc/BCCContext.h"
 #include "bcc/Source.h"
-#include "bcc/Support/Log.h"
 #include "bcinfo/MetadataExtractor.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/IR/DataLayout.h"

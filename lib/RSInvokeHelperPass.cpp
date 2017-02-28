@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-#include "bcc/Assert.h"
-#include "bcc/Renderscript/RSTransforms.h"
-#include "bcc/Renderscript/RSUtils.h"
+#include "Assert.h"
+#include "Log.h"
+#include "RSTransforms.h"
+#include "RSUtils.h"
 #include "rsDefines.h"
+
+#include "bcc/Config.h"
+#include "bcinfo/MetadataExtractor.h"
 
 #include <cstdlib>
 
@@ -32,11 +36,6 @@
 #include <llvm/Pass.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Transforms/Utils/BasicBlockUtils.h>
-
-#include "bcc/Config/Config.h"
-#include "bcc/Support/Log.h"
-
-#include "bcinfo/MetadataExtractor.h"
 
 using namespace bcc;
 

@@ -16,12 +16,11 @@
 
 #include "bcc/BCCContext.h"
 
-#include <new>
-
-#include "bcc/Source.h"
-#include "bcc/Support/Log.h"
-
 #include "BCCContextImpl.h"
+#include "Log.h"
+#include "bcc/Source.h"
+
+#include <new>
 
 using namespace bcc;
 

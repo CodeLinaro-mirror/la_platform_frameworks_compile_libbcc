@@ -14,7 +14,18 @@
  * limitations under the License.
  */
 
+#include "Assert.h"
+#include "Log.h"
+#include "RSTransforms.h"
+#include "RSUtils.h"
+#include "rsDefines.h"
+
 #include "bcc/Compiler.h"
+#include "bcc/CompilerConfig.h"
+#include "bcc/Config.h"
+#include "bcc/Script.h"
+#include "bcc/Source.h"
+#include "bcinfo/MetadataExtractor.h"
 
 #include <llvm/Analysis/Passes.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
@@ -30,19 +41,6 @@
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Vectorize.h>
-
-#include "bcc/Assert.h"
-#include "bcc/Config/Config.h"
-#include "bcc/Renderscript/RSScript.h"
-#include "bcc/Renderscript/RSTransforms.h"
-#include "bcc/Renderscript/RSUtils.h"
-#include "bcc/Script.h"
-#include "bcc/Source.h"
-#include "bcc/Support/CompilerConfig.h"
-#include "bcc/Support/Log.h"
-#include "bcc/Support/OutputFile.h"
-#include "bcinfo/MetadataExtractor.h"
-#include "rsDefines.h"
 
 #include <string>
 #include <set>
@@ -150,7 +148,7 @@ Compiler::~Compiler() {
 
 // This function has complete responsibility for creating and executing the
 // exact list of compiler passes.
-enum Compiler::ErrorCode Compiler::runPasses(Script &pScript,
+enum Compiler::ErrorCode Compiler::runPasses(Script &script,
                                              llvm::raw_pwrite_stream &pResult) {
   // Pass manager for link-time optimization
   llvm::legacy::PassManager transformPasses;
@@ -164,13 +162,13 @@ enum Compiler::ErrorCode Compiler::runPasses(Script &pScript,
   // Add some initial custom passes.
   addInvokeHelperPass(transformPasses);
   addExpandKernelPass(transformPasses);
-  addDebugInfoPass(pScript, transformPasses);
+  addDebugInfoPass(script, transformPasses);
   addInvariantPass(transformPasses);
   if (mTarget->getOptLevel() != llvm::CodeGenOpt::None) {
-    if (!addInternalizeSymbolsPass(pScript, transformPasses))
+    if (!addInternalizeSymbolsPass(script, transformPasses))
       return kErrCustomPasses;
   }
-  addGlobalInfoPass(pScript, transformPasses);
+  addGlobalInfoPass(script, transformPasses);
 
   if (mTarget->getOptLevel() == llvm::CodeGenOpt::None) {
     transformPasses.add(llvm::createGlobalOptimizerPass());
@@ -207,13 +205,11 @@ enum Compiler::ErrorCode Compiler::runPasses(Script &pScript,
 
   // RSEmbedInfoPass needs to come after we have scanned for non-threadable
   // functions.
-  // Script passed to RSCompiler must be a RSScript.
-  RSScript &script = static_cast<RSScript &>(pScript);
   if (script.getEmbedInfo())
     transformPasses.add(createRSEmbedInfoPass());
 
   // Execute the passes.
-  transformPasses.run(pScript.getSource().getModule());
+  transformPasses.run(script.getSource().getModule());
 
   // Run backend separately to avoid interference between debug metadata
   // generation and backend initialization.
@@ -226,15 +222,15 @@ enum Compiler::ErrorCode Compiler::runPasses(Script &pScript,
   }
 
   // Execute the passes.
-  codeGenPasses.run(pScript.getSource().getModule());
+  codeGenPasses.run(script.getSource().getModule());
 
   return kSuccess;
 }
 
-enum Compiler::ErrorCode Compiler::compile(Script &pScript,
+enum Compiler::ErrorCode Compiler::compile(Script &script,
                                            llvm::raw_pwrite_stream &pResult,
                                            llvm::raw_ostream *IRStream) {
-  llvm::Module &module = pScript.getSource().getModule();
+  llvm::Module &module = script.getSource().getModule();
   enum ErrorCode err;
 
   if (mTarget == nullptr) {
@@ -282,7 +278,7 @@ enum Compiler::ErrorCode Compiler::compile(Script &pScript,
     }
   }
 
-  if ((err = runPasses(pScript, pResult)) != kSuccess) {
+  if ((err = runPasses(script, pResult)) != kSuccess) {
     return err;
   }
 
@@ -293,33 +289,9 @@ enum Compiler::ErrorCode Compiler::compile(Script &pScript,
   return kSuccess;
 }
 
-enum Compiler::ErrorCode Compiler::compile(Script &pScript,
-                                           OutputFile &pResult,
-                                           llvm::raw_ostream *IRStream) {
-  // Check the state of the specified output file.
-  if (pResult.hasError()) {
-    return kErrInvalidOutputFileState;
-  }
-
-  // Open the output file decorated in llvm::raw_ostream.
-  llvm::raw_pwrite_stream *out = pResult.dup();
-  if (out == nullptr) {
-    return kErrPrepareOutput;
-  }
-
-  // Delegate the request.
-  enum Compiler::ErrorCode err = compile(pScript, *out, IRStream);
-
-  // Close the output before return.
-  delete out;
-
-  return err;
-}
-
-bool Compiler::addInternalizeSymbolsPass(Script &pScript, llvm::legacy::PassManager &pPM) {
+bool Compiler::addInternalizeSymbolsPass(Script &script, llvm::legacy::PassManager &pPM) {
   // Add a pass to internalize the symbols that don't need to have global
   // visibility.
-  RSScript &script = static_cast<RSScript &>(pScript);
   llvm::Module &module = script.getSource().getModule();
   bcinfo::MetadataExtractor me(&module);
   if (!me.extract()) {
@@ -414,8 +386,8 @@ void Compiler::addInvokeHelperPass(llvm::legacy::PassManager &pPM) {
   }
 }
 
-void Compiler::addDebugInfoPass(Script &pScript, llvm::legacy::PassManager &pPM) {
-  if (pScript.getSource().getDebugInfoEnabled())
+void Compiler::addDebugInfoPass(Script &script, llvm::legacy::PassManager &pPM) {
+  if (script.getSource().getDebugInfoEnabled())
     pPM.add(createRSAddDebugInfoPass());
 }
 
@@ -425,9 +397,8 @@ void Compiler::addExpandKernelPass(llvm::legacy::PassManager &pPM) {
   pPM.add(createRSKernelExpandPass(pEnableStepOpt));
 }
 
-void Compiler::addGlobalInfoPass(Script &pScript, llvm::legacy::PassManager &pPM) {
+void Compiler::addGlobalInfoPass(Script &script, llvm::legacy::PassManager &pPM) {
   // Add additional information about RS global variables inside the Module.
-  RSScript &script = static_cast<RSScript &>(pScript);
   if (script.getEmbedGlobalInfo()) {
     pPM.add(createRSGlobalInfoPass(script.getEmbedGlobalInfoSkipConstant()));
   }
@@ -439,8 +410,8 @@ void Compiler::addInvariantPass(llvm::legacy::PassManager &pPM) {
   pPM.add(createRSInvariantPass());
 }
 
-enum Compiler::ErrorCode Compiler::screenGlobalFunctions(Script &pScript) {
-  llvm::Module &module = pScript.getSource().getModule();
+enum Compiler::ErrorCode Compiler::screenGlobalFunctions(Script &script) {
+  llvm::Module &module = script.getSource().getModule();
 
   // Materialize the bitcode module in case this is a lazy-load module.  Do not
   // clear the materializer by calling materializeAllPermanently since the
@@ -463,10 +434,10 @@ enum Compiler::ErrorCode Compiler::screenGlobalFunctions(Script &pScript) {
 
 }
 
-void Compiler::translateGEPs(Script &pScript) {
+void Compiler::translateGEPs(Script &script) {
   llvm::legacy::PassManager pPM;
   pPM.add(createRSX86TranslateGEPPass());
 
   // Materialization done in screenGlobalFunctions above.
-  pPM.run(pScript.getSource().getModule());
+  pPM.run(script.getSource().getModule());
 }

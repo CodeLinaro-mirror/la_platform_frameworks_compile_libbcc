@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-#include "bcc/Assert.h"
-#include "bcc/Renderscript/RSUtils.h"
-#include "bcc/Support/Log.h"
+#include "Assert.h"
+#include "Log.h"
+#include "RSUtils.h"
 
 #include <algorithm>
 #include <vector>

@@ -16,6 +16,9 @@
 
 #include "bcc/Source.h"
 
+#include "Log.h"
+#include "bcc/BCCContext.h"
+
 #include <new>
 
 #include <llvm/ADT/STLExtras.h>
@@ -26,9 +29,6 @@
 #include <llvm/Linker/Linker.h>
 #include <llvm/Support/MemoryBuffer.h>
 #include "llvm/Support/raw_ostream.h"
-
-#include "bcc/BCCContext.h"
-#include "bcc/Support/Log.h"
 
 #include "bcinfo/MetadataExtractor.h"
 

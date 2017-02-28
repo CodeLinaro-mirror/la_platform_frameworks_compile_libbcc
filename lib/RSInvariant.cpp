@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include "bcc/Renderscript/RSTransforms.h"
-#include "bcc/Renderscript/RSUtils.h"
+#include "RSTransforms.h"
+#include "RSUtils.h"
 
 #include <llvm/IR/Function.h>
 #include <llvm/IR/Instructions.h>

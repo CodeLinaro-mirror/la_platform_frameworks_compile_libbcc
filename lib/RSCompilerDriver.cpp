@@ -14,32 +14,32 @@
  * limitations under the License.
  */
 
-#include "bcc/Renderscript/RSCompilerDriver.h"
+#include "bcc/RSCompilerDriver.h"
+
+#include "Assert.h"
+#include "FileMutex.h"
+#include "Log.h"
+#include "RSScriptGroupFusion.h"
+
+#include "bcc/BCCContext.h"
+#include "bcc/Compiler.h"
+#include "bcc/CompilerConfig.h"
+#include "bcc/Config.h"
+#include "bcc/Initialization.h"
+#include "bcc/Script.h"
+#include "bcc/Source.h"
+#include "bcinfo/BitcodeWrapper.h"
+#include "bcinfo/MetadataExtractor.h"
 
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/IR/AssemblyAnnotationWriter.h"
 #include <llvm/IR/Module.h>
 #include "llvm/Linker/Linker.h"
 #include <llvm/Support/CommandLine.h>
+#include <llvm/Support/FileSystem.h>
 #include <llvm/Support/Path.h>
 #include <llvm/Support/raw_ostream.h>
 #include <llvm/Target/TargetMachine.h>
-
-#include "bcinfo/BitcodeWrapper.h"
-#include "bcc/Assert.h"
-#include "bcinfo/MetadataExtractor.h"
-#include "bcc/BCCContext.h"
-#include "bcc/Compiler.h"
-#include "bcc/Config/Config.h"
-#include "bcc/Renderscript/RSScript.h"
-#include "bcc/Renderscript/RSScriptGroupFusion.h"
-#include "bcc/Support/CompilerConfig.h"
-#include "bcc/Source.h"
-#include "bcc/Support/FileMutex.h"
-#include "bcc/Support/Log.h"
-#include "bcc/Support/InputFile.h"
-#include "bcc/Support/Initialization.h"
-#include "bcc/Support/OutputFile.h"
 
 #include <sstream>
 #include <string>
@@ -67,11 +67,10 @@ RSCompilerDriver::~RSCompilerDriver() {
 extern llvm::cl::opt<bool> EnableGlobalMerge;
 #endif
 
-bool RSCompilerDriver::setupConfig(const RSScript &pScript) {
+bool RSCompilerDriver::setupConfig(const Script &pScript) {
   bool changed = false;
 
-  const llvm::CodeGenOpt::Level script_opt_level =
-      static_cast<llvm::CodeGenOpt::Level>(pScript.getOptimizationLevel());
+  const llvm::CodeGenOpt::Level script_opt_level = pScript.getOptimizationLevel();
 
 #if defined(PROVIDE_ARM_CODEGEN)
   EnableGlobalMerge = mEnableGlobalMerge;
@@ -111,7 +110,7 @@ bool RSCompilerDriver::setupConfig(const RSScript &pScript) {
   return changed;
 }
 
-Compiler::ErrorCode RSCompilerDriver::compileScript(RSScript& pScript, const char* pScriptName,
+Compiler::ErrorCode RSCompilerDriver::compileScript(Script& pScript, const char* pScriptName,
                                                     const char* pOutputPath,
                                                     const char* pRuntimePath,
                                                     const char* pBuildChecksum,
@@ -143,7 +142,7 @@ Compiler::ErrorCode RSCompilerDriver::compileScript(RSScript& pScript, const cha
   //===--------------------------------------------------------------------===//
   // Link RS script with Renderscript runtime.
   //===--------------------------------------------------------------------===//
-  if (!RSScript::LinkRuntime(pScript, pRuntimePath)) {
+  if (!pScript.LinkRuntime(pRuntimePath)) {
     ALOGE("Failed to link script '%s' with Renderscript runtime %s!",
           pScriptName, pRuntimePath);
     return Compiler::kErrInvalidSource;
@@ -156,23 +155,22 @@ Compiler::ErrorCode RSCompilerDriver::compileScript(RSScript& pScript, const cha
     //===------------------------------------------------------------------===//
     // Acquire the write lock for writing output object file.
     //===------------------------------------------------------------------===//
-    FileMutex<FileBase::kWriteLock> write_output_mutex(pOutputPath);
+    FileMutex write_output_mutex(pOutputPath);
 
-    if (write_output_mutex.hasError() || !write_output_mutex.lock()) {
+    if (write_output_mutex.hasError() || !write_output_mutex.lockMutex()) {
       ALOGE("Unable to acquire the lock for writing %s! (%s)",
             pOutputPath, write_output_mutex.getErrorMessage().c_str());
-      return Compiler::kErrInvalidSource;
+      return Compiler::kErrInvalidOutputFileState;
     }
 #endif
 
     // Open the output file for write.
-    OutputFile output_file(pOutputPath,
-                           FileBase::kTruncate | FileBase::kBinary);
-
-    if (output_file.hasError()) {
-        ALOGE("Unable to open %s for write! (%s)", pOutputPath,
-              output_file.getErrorMessage().c_str());
-      return Compiler::kErrInvalidSource;
+    std::error_code error;
+    llvm::raw_fd_ostream out_stream(pOutputPath, error, llvm::sys::fs::F_RW);
+    if (error) {
+      ALOGE("Unable to open %s for write! (%s)", pOutputPath,
+            error.message().c_str());
+      return Compiler::kErrPrepareOutput;
     }
 
     // Setup the config to the compiler.
@@ -193,23 +191,22 @@ Compiler::ErrorCode RSCompilerDriver::compileScript(RSScript& pScript, const cha
       }
     }
 
-    OutputFile *ir_file = nullptr;
-    llvm::raw_fd_ostream *IRStream = nullptr;
+    std::unique_ptr<llvm::raw_fd_ostream> IRStream;
     if (pDumpIR) {
       std::string path(pOutputPath);
       path.append(".ll");
-      ir_file = new OutputFile(path.c_str(), FileBase::kTruncate);
-      IRStream = ir_file->dup();
+      IRStream.reset(new llvm::raw_fd_ostream(
+          path.c_str(), error, llvm::sys::fs::F_RW | llvm::sys::fs::F_Text));
+      if (error) {
+        ALOGE("Unable to open %s for write! (%s)", path.c_str(),
+              error.message().c_str());
+        return Compiler::kErrPrepareOutput;
+      }
     }
 
     // Run the compiler.
     Compiler::ErrorCode compile_result =
-        mCompiler.compile(pScript, output_file, IRStream);
-
-    if (ir_file) {
-      ir_file->close();
-      delete ir_file;
-    }
+        mCompiler.compile(pScript, out_stream, IRStream.get());
 
     if (compile_result != Compiler::kSuccess) {
       ALOGE("Unable to compile the source to file %s! (%s)", pOutputPath,
@@ -264,7 +261,8 @@ bool RSCompilerDriver::build(BCCContext &pContext,
     return false;
   }
 
-  RSScript script(*source, getConfig());
+  Script script(source);
+  script.setOptimizationLevel(getConfig()->getOptimizationLevel());
   if (pLinkRuntimeCallback) {
     setLinkRuntimeCallback(pLinkRuntimeCallback);
   }
@@ -277,7 +275,7 @@ bool RSCompilerDriver::build(BCCContext &pContext,
   // Read information from bitcode wrapper.
   bcinfo::BitcodeWrapper wrapper(pBitcode, pBitcodeSize);
   script.setCompilerVersion(wrapper.getCompilerVersion());
-  script.setOptimizationLevel(static_cast<RSScript::OptimizationLevel>(
+  script.setOptimizationLevel(static_cast<llvm::CodeGenOpt::Level>(
                               wrapper.getOptimizationLevel()));
 
 // Assertion-enabled builds can't compile legacy bitcode (due to the use of
@@ -384,11 +382,13 @@ bool RSCompilerDriver::buildScriptGroup(
 
   const std::unique_ptr<Source> source(
       Source::CreateFromModule(Context, pOutputFilepath, module, true));
-  RSScript script(*source);
+  Script script(source.get());
 
   // Embed the info string directly in the ELF
   script.setEmbedInfo(true);
-  script.setOptimizationLevel(RSScript::kOptLvl3);
+  // TODO jeanluc Should we override the config's optimization?
+  // i.e., why not script.setOptimizationLevel(getConfig()->getOptimizationLevel)?
+  script.setOptimizationLevel(llvm::CodeGenOpt::Level::Aggressive);
   script.setEmbedGlobalInfo(mEmbedGlobalInfo);
   script.setEmbedGlobalInfoSkipConstant(mEmbedGlobalInfoSkipConstant);
 
@@ -411,7 +411,7 @@ bool RSCompilerDriver::buildScriptGroup(
   return true;
 }
 
-bool RSCompilerDriver::buildForCompatLib(RSScript &pScript, const char *pOut,
+bool RSCompilerDriver::buildForCompatLib(Script &pScript, const char *pOut,
                                          const char *pBuildChecksum,
                                          const char *pRuntimePath,
                                          bool pDumpIR) {

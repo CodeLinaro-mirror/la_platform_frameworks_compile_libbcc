@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <string>
 
-#include "bcc/Assert.h"
-#include "bcc/Renderscript/RSTransforms.h"
-#include "bcc/Support/Log.h"
+#include "Assert.h"
+#include "Log.h"
+#include "RSTransforms.h"
+
 #include "bcinfo/MetadataExtractor.h"
+
+#include <string>
 
 #include <llvm/Pass.h>
 #include <llvm/IR/DIBuilder.h>

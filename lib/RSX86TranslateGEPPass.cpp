@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "bcc/Assert.h"
-#include "bcc/Config/Config.h"
-#include "bcc/Support/Log.h"
-#include "bcc/Renderscript/RSTransforms.h"
+#include "bcc/Config.h"
+#include "Assert.h"
+#include "Log.h"
+#include "RSTransforms.h"
 
 #include <cstdlib>
 

@@ -14,16 +14,17 @@
  * limitations under the License.
  */
 
-#include "bcc/Support/CompilerConfig.h"
-#include "bcc/Config/Config.h"
-#include "bcc/Support/Properties.h"
+#include "bcc/CompilerConfig.h"
+
+#include "Log.h"
+#include "Properties.h"
+
+#include "bcc/Config.h"
 
 #include <llvm/CodeGen/SchedulerRegistry.h>
 #include <llvm/MC/SubtargetFeature.h>
 #include <llvm/Support/Host.h>
 #include <llvm/Support/TargetRegistry.h>
-
-#include "bcc/Support/Log.h"
 
 using namespace bcc;
 

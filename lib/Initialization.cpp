@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
-#include "bcc/Support/Initialization.h"
+#include "bcc/Initialization.h"
+
+#include "Log.h"
+#include "bcc/Config.h"
 
 #include <cstdlib>
 
@@ -22,9 +25,6 @@
 #include <llvm/PassRegistry.h>
 #include <llvm/Support/ErrorHandling.h>
 #include <llvm/Support/TargetSelect.h>
-
-#include "bcc/Config/Config.h"
-#include "bcc/Support/Log.h"
 
 namespace {
 
