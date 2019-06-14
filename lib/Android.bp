@@ -12,9 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-cc_library {
+cc_library_shared {
     name: "libbcc",
-    vendor_available: true,
     host_supported: true,
     defaults: ["libbcc-defaults"],
 
