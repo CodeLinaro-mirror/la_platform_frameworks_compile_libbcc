@@ -29,6 +29,7 @@ cc_library_shared {
     vendor_available: true,
     double_loadable: true,
     host_supported: true,
+    sdclang: false,
     defaults: [
         "llvm-defaults",
         "rs-version",
