@@ -25,7 +25,6 @@ cc_library {
     name: "libbcc",
     vendor_available: true,
     host_supported: true,
-    sdclang: false,
     defaults: ["libbcc-defaults"],
 
     srcs: [
