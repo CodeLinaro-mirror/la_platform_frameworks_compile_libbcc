@@ -29,7 +29,6 @@ cc_library_shared {
     vendor_available: true,
     double_loadable: true,
     host_supported: true,
-    sdclang: false,
     defaults: [
         "llvm-defaults",
         "rs-version",
@@ -42,10 +41,7 @@ cc_library_shared {
     ],
 
     cflags: [
-        "-Wall",
         "-Wno-unused-parameter",
-        "-Werror",
-
         "-D__DISABLE_ASSERTS",
     ],
 
@@ -69,7 +65,7 @@ cc_library_shared {
         "libLLVMBitReader_2_7",
         "libLLVMBitReader_3_0",
         "libLLVMBitWriter_3_2",
-	"libStripUnkAttr",
+        "libStripUnkAttr",
     ],
 
     target: {
