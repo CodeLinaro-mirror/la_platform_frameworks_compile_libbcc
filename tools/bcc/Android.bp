@@ -26,6 +26,7 @@ package {
 cc_binary {
     name: "bcc",
     host_supported: true,
+    sdclang: false,
     defaults: ["libbcc-defaults"],
 
     shared_libs: [
